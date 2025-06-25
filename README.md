@@ -1,32 +1,6 @@
-# AWS VPC and Subnet Module
-
-This Terraform module provisions a complete **VPC networking layer** in AWS. It includes a VPC, public and private subnets across multiple availability zones, internet gateway, NAT gateways, and route tables — all configured with proper tagging and modular inputs.
-
-The module is designed to provide a reusable, scalable, and production-ready network foundation for applications running in AWS.
-
-## 🔧 Features
-
-- Creates a **custom VPC** with user-defined CIDR
-- Supports **multiple public and private subnets** with availability zone mapping
-- Attaches an **internet gateway** for public subnet access
-- Creates **Elastic IPs** and **NAT gateways** in public subnets for private subnet internet access
-- Configures **route tables** and automatically associates them with subnets
-- Outputs essential network IDs and NAT gateway public IPs for use in downstream modules
-
-## 🚀 Use Cases
-
-- Foundational network setup for EKS, ECS, RDS, or EC2 deployments
-- Isolated public/private subnet architecture with internet/NAT routing
-- Reusable network layer for staging, dev, or production environments
-
-> This module follows AWS best practices for high availability and modular infrastructure design.
-
 ## Requirements
 
-| Name      | Version   |
-|-----------|-----------|
-| Terraform | >= 1.0    |
-| AWS CLI   | >= 2.0    |
+No requirements.
 
 ## Providers
 
@@ -49,17 +23,23 @@ No modules.
 | [aws_route_table.public](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table) | resource |
 | [aws_route_table_association.private](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
 | [aws_route_table_association.public](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
+| [aws_security_group.eks_vpce_sg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_subnet.private](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
 | [aws_subnet.public](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
 | [aws_vpc.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc) | resource |
+| [aws_vpc_endpoint.eks](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
+| [aws_vpc_endpoint.eks_auth](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | The AWS region where resources will be deployed | `string` | n/a | yes |
-| <a name="input_private_subnets"></a> [private\_subnets](#input\_private\_subnets) | Map of private subnets with CIDR, Availability Zone, and name | <pre>map(object({<br/>    cidr = string<br/>    az   = string<br/>    name = string<br/>  }))</pre> | n/a | yes |
-| <a name="input_public_subnets"></a> [public\_subnets](#input\_public\_subnets) | Map of public subnets with CIDR, Availability Zone, and name | <pre>map(object({<br/>    cidr = string<br/>    az   = string<br/>    name = string<br/>  }))</pre> | n/a | yes |
+| <a name="input_bastion_subnet_id"></a> [bastion\_subnet\_id](#input\_bastion\_subnet\_id) | The subnet ID where the Bastion EC2 instance will be deployed | `string` | n/a | yes |
+| <a name="input_create_networking_resources"></a> [create\_networking\_resources](#input\_create\_networking\_resources) | Whether to create VPC, subnets, IGW, NAT, etc. | `bool` | `true` | no |
+| <a name="input_existing_vpc_id"></a> [existing\_vpc\_id](#input\_existing\_vpc\_id) | ID of existing VPC | `string` | `""` | no |
+| <a name="input_private_subnets"></a> [private\_subnets](#input\_private\_subnets) | Map of private subnets | <pre>map(object({<br/>    cidr = string<br/>    az   = string<br/>    name = string<br/>  }))</pre> | `{}` | no |
+| <a name="input_public_subnets"></a> [public\_subnets](#input\_public\_subnets) | Map of public subnets | <pre>map(object({<br/>    cidr = string<br/>    az   = string<br/>    name = string<br/>  }))</pre> | `{}` | no |
+| <a name="input_region"></a> [region](#input\_region) | AWS region | `string` | n/a | yes |
 | <a name="input_vpc_cidr"></a> [vpc\_cidr](#input\_vpc\_cidr) | CIDR block for the VPC | `string` | n/a | yes |
 | <a name="input_vpc_name"></a> [vpc\_name](#input\_vpc\_name) | Name tag for the VPC | `string` | n/a | yes |
 
@@ -67,7 +47,6 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_nat_gateway_ips"></a> [nat\_gateway\_ips](#output\_nat\_gateway\_ips) | List of public IP addresses for the NAT Gateways |
-| <a name="output_private_subnet_ids"></a> [private\_subnet\_ids](#output\_private\_subnet\_ids) | List of private subnet IDs |
-| <a name="output_public_subnet_ids"></a> [public\_subnet\_ids](#output\_public\_subnet\_ids) | List of public subnet IDs |
-| <a name="output_vpc_id"></a> [vpc\_id](#output\_vpc\_id) | The ID of the created VPC |
+| <a name="output_private_subnet_ids"></a> [private\_subnet\_ids](#output\_private\_subnet\_ids) | n/a |
+| <a name="output_public_subnet_ids"></a> [public\_subnet\_ids](#output\_public\_subnet\_ids) | n/a |
+| <a name="output_vpc_id"></a> [vpc\_id](#output\_vpc\_id) | n/a |
