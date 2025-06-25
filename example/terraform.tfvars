@@ -38,5 +38,5 @@ private_subnets = {
   }
 }
 
-existing_vpc_id    = "vpc-xxxxxxxxxxxxxxxx"
-bastion_subnet_id  = "subnet-xxxxxxxxxxxxxxxx"
+existing_vpc_id    = "vpc-0e786abb3fb6719c7"
+bastion_subnet_id  = "subnet-07b3b6e3fd9554f13"
