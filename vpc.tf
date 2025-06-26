@@ -126,6 +126,10 @@ resource "aws_vpc_endpoint" "interface_endpoints" {
   security_group_ids  = [aws_security_group.eks_vpce_sg.id]
   private_dns_enabled = true
 
+  timeouts {
+    create = "15m"
+  }
+
   tags = {
     Name = "vpc-endpoint-${replace(each.value, ".", "-")}"
   }
