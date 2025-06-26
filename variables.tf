@@ -46,8 +46,21 @@ variable "region" {
   type        = string
 }
 
-variable "bastion_subnet_id" {
-  description = "The subnet ID where the Bastion EC2 instance will be deployed"
-  type        = string
+variable "vpc_endpoint_subnet_ids" {
+  description = "List of subnet IDs (one per AZ) to attach to the VPC Interface Endpoint"
+  type        = list(string)
 }
+
+variable "enable_vpc_endpoints" {
+  description = "Whether to create VPC interface endpoints"
+  type        = bool
+  default     = true
+}
+
+variable "vpc_interface_service_names" {
+  description = "List of AWS service names for VPC interface endpoints (e.g., com.amazonaws.us-east-2.eks-auth)"
+  type        = list(string)
+}
+
+
 

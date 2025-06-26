@@ -117,22 +117,19 @@ resource "aws_security_group" "eks_vpce_sg" {
   }
 }
 
-
-resource "aws_vpc_endpoint" "eks" {
+resource "aws_vpc_endpoint" "interface_endpoints" {
+  for_each            = var.enable_vpc_endpoints ? toset(var.vpc_interface_service_names) : []
   vpc_id              = local.vpc_id
-  service_name        = "com.amazonaws.${var.region}.eks"
+  service_name        = each.value
   vpc_endpoint_type   = "Interface"
-  subnet_ids          = [var.bastion_subnet_id]
+  subnet_ids          = var.vpc_endpoint_subnet_ids
   security_group_ids  = [aws_security_group.eks_vpce_sg.id]
   private_dns_enabled = true
+
+  tags = {
+    Name = "vpc-endpoint-${replace(each.value, ".", "-")}"
+  }
 }
 
-resource "aws_vpc_endpoint" "eks_auth" {
-  vpc_id              = local.vpc_id
-  service_name        = "com.amazonaws.${var.region}.eks-auth"
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = [var.bastion_subnet_id]
-  security_group_ids  = [aws_security_group.eks_vpce_sg.id]
-  private_dns_enabled = true
-}
+
 
