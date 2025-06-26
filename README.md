@@ -27,20 +27,21 @@ No modules.
 | [aws_subnet.private](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
 | [aws_subnet.public](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
 | [aws_vpc.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc) | resource |
-| [aws_vpc_endpoint.eks](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
-| [aws_vpc_endpoint.eks_auth](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
+| [aws_vpc_endpoint.interface_endpoints](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_bastion_subnet_id"></a> [bastion\_subnet\_id](#input\_bastion\_subnet\_id) | The subnet ID where the Bastion EC2 instance will be deployed | `string` | n/a | yes |
 | <a name="input_create_networking_resources"></a> [create\_networking\_resources](#input\_create\_networking\_resources) | Whether to create VPC, subnets, IGW, NAT, etc. | `bool` | `true` | no |
+| <a name="input_enable_vpc_endpoints"></a> [enable\_vpc\_endpoints](#input\_enable\_vpc\_endpoints) | Whether to create VPC interface endpoints | `bool` | `true` | no |
 | <a name="input_existing_vpc_id"></a> [existing\_vpc\_id](#input\_existing\_vpc\_id) | ID of existing VPC | `string` | `""` | no |
 | <a name="input_private_subnets"></a> [private\_subnets](#input\_private\_subnets) | Map of private subnets | <pre>map(object({<br/>    cidr = string<br/>    az   = string<br/>    name = string<br/>  }))</pre> | `{}` | no |
 | <a name="input_public_subnets"></a> [public\_subnets](#input\_public\_subnets) | Map of public subnets | <pre>map(object({<br/>    cidr = string<br/>    az   = string<br/>    name = string<br/>  }))</pre> | `{}` | no |
 | <a name="input_region"></a> [region](#input\_region) | AWS region | `string` | n/a | yes |
 | <a name="input_vpc_cidr"></a> [vpc\_cidr](#input\_vpc\_cidr) | CIDR block for the VPC | `string` | n/a | yes |
+| <a name="input_vpc_endpoint_subnet_ids"></a> [vpc\_endpoint\_subnet\_ids](#input\_vpc\_endpoint\_subnet\_ids) | List of subnet IDs (one per AZ) to attach to the VPC Interface Endpoint | `list(string)` | n/a | yes |
+| <a name="input_vpc_interface_service_names"></a> [vpc\_interface\_service\_names](#input\_vpc\_interface\_service\_names) | List of AWS service names for VPC interface endpoints (e.g., com.amazonaws.us-east-2.eks-auth) | `list(string)` | n/a | yes |
 | <a name="input_vpc_name"></a> [vpc\_name](#input\_vpc\_name) | Name tag for the VPC | `string` | n/a | yes |
 
 ## Outputs
