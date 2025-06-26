@@ -1,0 +1,55 @@
+aws_region = "us-east-1"
+vpc_cidr   = "10.0.0.0/16"
+vpc_name   = "nx-vpc"
+
+create_networking_resources = false
+
+public_subnets = {
+  subnet1 = {
+    cidr = "10.0.1.0/24"
+    az   = "us-east-1a"
+    name = "public-1a"
+  }
+  subnet2 = {
+    cidr = "10.0.2.0/24"
+    az   = "us-east-1b"
+    name = "public-1b"
+  }
+  subnet3 = {
+    cidr = "10.0.3.0/24"
+    az   = "us-east-1c"
+    name = "public-1c"
+  }
+}
+
+private_subnets = {
+  subnet1 = {
+    cidr = "10.0.11.0/24"
+    az   = "us-east-1a"
+    name = "private-1a"
+  }
+  subnet2 = {
+    cidr = "10.0.12.0/24"
+    az   = "us-east-1b"
+    name = "private-1b"
+  }
+  subnet3 = {
+    cidr = "10.0.13.0/24"
+    az   = "us-east-1c"
+    name = "private-1c"
+  }
+}
+
+# Endpoints
+
+enable_vpc_endpoints = false
+
+existing_vpc_id = "vpc-xxxxxxxxxxxxxxxxx"
+
+vpc_endpoint_subnet_ids = [
+  "subnet-xxxxxxxxxxxxxxxxx"
+]
+vpc_interface_service_names = [
+  "com.amazonaws.us-east-1.eks-auth",
+  "com.amazonaws.us-east-1.sts"
+]
