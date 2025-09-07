@@ -4,8 +4,8 @@ data "aws_availability_zones" "available" {}
 locals {
   vpc_id              = var.create_networking_resources ? aws_vpc.main[0].id : var.existing_vpc_id
   is_prod             = var.environment == "prod"
-  single_nat_key      = var.create_networking_resources && !local.is_prod ? keys(aws_subnet.public)[0] : null
-  nat_gateway_targets = local.is_prod ? aws_subnet.public : tomap({ (local.single_nat_key) = aws_subnet.public[local.single_nat_key] })
+  single_nat_key      = var.create_networking_resources && !local.is_prod ? keys(var.public_subnets)[0] : null
+  nat_gateway_targets = local.is_prod ? var.public_subnets : tomap({ (local.single_nat_key) = var.public_subnets[local.single_nat_key] })
 }
 
 resource "aws_vpc" "main" {
@@ -52,15 +52,19 @@ resource "aws_subnet" "private" {
 
 resource "aws_eip" "nat" {
   for_each = var.create_networking_resources ? local.nat_gateway_targets : {}
+  
+  tags = {
+    Name = "${var.vpc_name}-nat-eip-${each.key}"
+  }
 }
 
 resource "aws_nat_gateway" "nat" {
   for_each      = var.create_networking_resources ? local.nat_gateway_targets : {}
   allocation_id = aws_eip.nat[each.key].id
-  subnet_id     = each.value.id
+  subnet_id     = aws_subnet.public[each.key].id
 
   tags = {
-    Name = "${each.value.tags["Name"]}-natgw"
+    Name = "${each.value.name}-natgw"
   }
 
   depends_on = [aws_internet_gateway.igw]
@@ -81,13 +85,13 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table_association" "public" {
-  for_each       = var.create_networking_resources ? aws_subnet.public : {}
-  subnet_id      = each.value.id
+  for_each       = var.create_networking_resources ? var.public_subnets : {}
+  subnet_id      = aws_subnet.public[each.key].id
   route_table_id = aws_route_table.public[0].id
 }
 
 resource "aws_route_table" "private" {
-  for_each = var.create_networking_resources ? aws_subnet.private : {}
+  for_each = var.create_networking_resources ? var.private_subnets : {}
   vpc_id   = local.vpc_id
 
   route {
@@ -96,17 +100,18 @@ resource "aws_route_table" "private" {
   }
 
   tags = {
-    Name = "${each.value.tags["Name"]}-rt"
+    Name = "${each.value.name}-rt"
   }
 }
 
 resource "aws_route_table_association" "private" {
-  for_each       = var.create_networking_resources ? aws_subnet.private : {}
-  subnet_id      = each.value.id
+  for_each       = var.create_networking_resources ? var.private_subnets : {}
+  subnet_id      = aws_subnet.private[each.key].id
   route_table_id = aws_route_table.private[each.key].id
 }
 
 resource "aws_security_group" "eks_vpce_sg" {
+  count  = var.enable_vpc_endpoints ? 1 : 0
   name   = "eks-vpc-endpoint-sg"
   vpc_id = local.vpc_id
 
@@ -131,7 +136,7 @@ resource "aws_vpc_endpoint" "interface_endpoints" {
   service_name        = each.value
   vpc_endpoint_type   = "Interface"
   subnet_ids          = var.vpc_endpoint_subnet_ids
-  security_group_ids  = [aws_security_group.eks_vpce_sg.id]
+  security_group_ids  = [aws_security_group.eks_vpce_sg[0].id]
   private_dns_enabled = true
 
   timeouts {
