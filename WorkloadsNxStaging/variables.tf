@@ -1,49 +1,38 @@
-# variables.tf
-variable "create_networking_resources" {
-  description = "Whether to create VPC, subnets, IGW, NAT, etc."
-  type        = bool
-  default     = true
+variable "aws_region" {
+  description = "The AWS region where the infrastructure will be deployed (e.g., us-east-2)"
 }
 
 variable "vpc_cidr" {
-  description = "CIDR block for the VPC"
-  type        = string
+  description = "The CIDR block for the VPC (e.g., 10.0.0.0/16)"
 }
 
 variable "vpc_name" {
-  description = "Name tag for the VPC"
-  type        = string
+  description = "The name to assign to the VPC and associated resources for tagging purposes"
 }
+
+variable "public_subnets" {
+  description = "A map of public subnets with their CIDR blocks, availability zones, and names"
+  type = map(object({
+    cidr = string
+    az   = string
+    name = string
+  }))
+}
+
+variable "private_subnets" {
+  description = "A map of private subnets with their CIDR blocks, availability zones, and names"
+  type = map(object({
+    cidr = string
+    az   = string
+    name = string
+  }))
+}
+
 
 variable "existing_vpc_id" {
   description = "ID of existing VPC"
   type        = string
   default     = ""
-}
-
-variable "public_subnets" {
-  description = "Map of public subnets"
-  type = map(object({
-    cidr = string
-    az   = string
-    name = string
-  }))
-  default = {}
-}
-
-variable "private_subnets" {
-  description = "Map of private subnets"
-  type = map(object({
-    cidr = string
-    az   = string
-    name = string
-  }))
-  default = {}
-}
-
-variable "region" {
-  description = "AWS region"
-  type        = string
 }
 
 variable "vpc_endpoint_subnet_ids" {
@@ -54,7 +43,7 @@ variable "vpc_endpoint_subnet_ids" {
 variable "enable_vpc_endpoints" {
   description = "Whether to create VPC interface endpoints"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "vpc_interface_service_names" {
@@ -62,12 +51,10 @@ variable "vpc_interface_service_names" {
   type        = list(string)
 }
 
-variable "environment" {
-  description = "Environment name like prod/staging/dev"
-  type        = string
+variable "create_networking_resources" {
+  description = "Whether to create VPC, subnets, IGW, NAT, etc."
+  type        = bool
+  default     = false
 }
-
-
-
 
 

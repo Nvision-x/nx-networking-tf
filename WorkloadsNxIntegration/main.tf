@@ -12,7 +12,7 @@ module "nx-networking" {
   vpc_endpoint_subnet_ids     = var.vpc_endpoint_subnet_ids
   vpc_interface_service_names = var.vpc_interface_service_names
   enable_vpc_endpoints        = var.enable_vpc_endpoints
-  environment = "staging"
+  environment                 = "integration"
 
 }
 

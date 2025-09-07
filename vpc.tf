@@ -1,10 +1,17 @@
+# Add this variable to control environment
+data "aws_availability_zones" "available" {}
+
 locals {
-  vpc_id = var.create_networking_resources ? aws_vpc.main[0].id : var.existing_vpc_id
+  vpc_id              = var.create_networking_resources ? aws_vpc.main[0].id : var.existing_vpc_id
+  is_prod             = var.environment == "prod"
+  single_nat_key      = var.create_networking_resources && !local.is_prod ? keys(aws_subnet.public)[0] : null
+  nat_gateway_targets = local.is_prod ? aws_subnet.public : tomap({ (local.single_nat_key) = aws_subnet.public[local.single_nat_key] })
 }
 
 resource "aws_vpc" "main" {
-  count      = var.create_networking_resources ? 1 : 0
-  cidr_block = var.vpc_cidr
+  count                = var.create_networking_resources ? 1 : 0
+  cidr_block           = var.vpc_cidr
+  enable_dns_hostnames = true
   tags = {
     Name = var.vpc_name
   }
@@ -26,7 +33,8 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = each.value.name
+    Name                     = each.value.name
+    "kubernetes.io/role/elb" = 1
   }
 }
 
@@ -37,16 +45,17 @@ resource "aws_subnet" "private" {
   availability_zone = each.value.az
 
   tags = {
-    Name = each.value.name
+    Name                              = each.value.name
+    "kubernetes.io/role/internal-elb" = 1
   }
 }
 
 resource "aws_eip" "nat" {
-  for_each = var.create_networking_resources ? aws_subnet.public : {}
+  for_each = var.create_networking_resources ? local.nat_gateway_targets : {}
 }
 
 resource "aws_nat_gateway" "nat" {
-  for_each      = var.create_networking_resources ? aws_subnet.public : {}
+  for_each      = var.create_networking_resources ? local.nat_gateway_targets : {}
   allocation_id = aws_eip.nat[each.key].id
   subnet_id     = each.value.id
 
@@ -83,7 +92,7 @@ resource "aws_route_table" "private" {
 
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.nat[each.key].id
+    nat_gateway_id = local.is_prod ? aws_nat_gateway.nat[each.key].id : aws_nat_gateway.nat[local.single_nat_key].id
   }
 
   tags = {
@@ -97,7 +106,6 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private[each.key].id
 }
 
-# VPC Endpoints & SG
 resource "aws_security_group" "eks_vpce_sg" {
   name   = "eks-vpc-endpoint-sg"
   vpc_id = local.vpc_id
@@ -134,6 +142,3 @@ resource "aws_vpc_endpoint" "interface_endpoints" {
     Name = "vpc-endpoint-${replace(each.value, ".", "-")}"
   }
 }
-
-
-
