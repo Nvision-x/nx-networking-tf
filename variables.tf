@@ -49,6 +49,7 @@ variable "region" {
 variable "vpc_endpoint_subnet_ids" {
   description = "List of subnet IDs (one per AZ) to attach to the VPC Interface Endpoint"
   type        = list(string)
+  default     = []
 }
 
 variable "enable_vpc_endpoints" {
@@ -60,6 +61,7 @@ variable "enable_vpc_endpoints" {
 variable "vpc_interface_service_names" {
   description = "List of AWS service names for VPC interface endpoints (e.g., com.amazonaws.us-east-2.eks-auth)"
   type        = list(string)
+  default     = []
 }
 
 variable "environment" {
