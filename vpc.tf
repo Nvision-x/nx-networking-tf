@@ -1,5 +1,6 @@
 # Add this variable to control environment
 data "aws_availability_zones" "available" {}
+data "aws_caller_identity" "current" {}
 
 locals {
   vpc_id              = var.create_networking_resources ? aws_vpc.main[0].id : var.existing_vpc_id
@@ -52,7 +53,7 @@ resource "aws_subnet" "private" {
 
 resource "aws_eip" "nat" {
   for_each = var.create_networking_resources ? local.nat_gateway_targets : {}
-  
+
   tags = {
     Name = "${var.vpc_name}-nat-eip-${each.key}"
   }
@@ -145,5 +146,82 @@ resource "aws_vpc_endpoint" "interface_endpoints" {
 
   tags = {
     Name = "vpc-endpoint-${replace(each.value, ".", "-")}"
+  }
+}
+
+# VPC Flow Logs - KMS Key for CloudWatch Log Group encryption
+resource "aws_kms_key" "vpc_flow_logs" {
+  count                   = var.enable_vpc_flow_logs && var.create_networking_resources ? 1 : 0
+  description             = "KMS key for VPC Flow Logs CloudWatch Log Group encryption"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow CloudWatch Logs"
+        Effect = "Allow"
+        Principal = {
+          Service = "logs.${var.region}.amazonaws.com"
+        }
+        Action = [
+          "kms:Encrypt*",
+          "kms:Decrypt*",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:Describe*"
+        ]
+        Resource = "*"
+        Condition = {
+          ArnLike = {
+            "kms:EncryptionContext:aws:logs:arn" = "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/vpc-flow-logs/${var.vpc_name}"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name = "${var.vpc_name}-flow-logs-kms"
+  }
+}
+
+resource "aws_kms_alias" "vpc_flow_logs" {
+  count         = var.enable_vpc_flow_logs && var.create_networking_resources ? 1 : 0
+  name          = "alias/${var.vpc_name}-flow-logs"
+  target_key_id = aws_kms_key.vpc_flow_logs[0].key_id
+}
+
+resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
+  count             = var.enable_vpc_flow_logs && var.create_networking_resources ? 1 : 0
+  name              = "/aws/vpc-flow-logs/${var.vpc_name}"
+  retention_in_days = var.vpc_flow_logs_retention_days
+  kms_key_id        = aws_kms_key.vpc_flow_logs[0].arn
+
+  tags = {
+    Name = "${var.vpc_name}-flow-logs"
+  }
+}
+
+resource "aws_flow_log" "vpc" {
+  count                = var.enable_vpc_flow_logs && var.create_networking_resources ? 1 : 0
+  iam_role_arn         = var.vpc_flow_logs_role_arn
+  log_destination      = aws_cloudwatch_log_group.vpc_flow_logs[0].arn
+  log_destination_type = "cloud-watch-logs"
+  traffic_type         = "ALL"
+  vpc_id               = local.vpc_id
+
+  tags = {
+    Name = "${var.vpc_name}-flow-log"
   }
 }
