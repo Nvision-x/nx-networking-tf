@@ -69,6 +69,24 @@ variable "environment" {
   type        = string
 }
 
+variable "enable_vpc_flow_logs" {
+  description = "Whether to enable VPC flow logs"
+  type        = bool
+  default     = true
+}
+
+variable "vpc_flow_logs_retention_days" {
+  description = "Number of days to retain VPC flow logs in CloudWatch"
+  type        = number
+  default     = 30
+}
+
+variable "vpc_flow_logs_role_arn" {
+  description = "IAM Role ARN for VPC flow logs (created in nx-iam-tf module)"
+  type        = string
+  default     = ""
+}
+
 
 
 
