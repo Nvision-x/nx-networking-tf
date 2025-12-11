@@ -18,6 +18,19 @@ resource "aws_vpc" "main" {
   }
 }
 
+# EC2.2 - Restrict default security group to disallow all inbound and outbound traffic
+# This works for both new VPCs (created by this module) and existing VPCs
+resource "aws_default_security_group" "default" {
+  vpc_id = local.vpc_id
+
+  # No ingress or egress rules defined = no traffic allowed
+  tags = {
+    Name = "${var.vpc_name}-default-sg-restricted"
+  }
+
+  depends_on = [aws_vpc.main]
+}
+
 resource "aws_internet_gateway" "igw" {
   count  = var.create_networking_resources ? 1 : 0
   vpc_id = aws_vpc.main[0].id
