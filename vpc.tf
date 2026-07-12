@@ -116,6 +116,27 @@ resource "aws_route_table" "private" {
   tags = {
     Name = "${each.value.name}-rt"
   }
+
+  # Tolerate externally-managed routes on the private route tables.
+  #
+  # The default 0.0.0.0/0 -> NAT route above is still created and owned here. But
+  # consumers frequently attach additional routes to these tables out-of-band —
+  # e.g. VPN/VGW-propagated routes, or routes to an ENI/appliance (SNAT gateway,
+  # firewall) that is itself created *downstream* of this module and therefore
+  # cannot be passed back in as an input without a dependency cycle. Those routes
+  # are added by the consumer as standalone `aws_route` resources.
+  #
+  # Without this, the inline `route` block is authoritative for the whole table
+  # and every apply strips any route it doesn't declare, fighting the consumer's
+  # standalone `aws_route` (perpetual diff + connectivity flaps). Ignoring `route`
+  # lets both coexist: this module seeds the default route on create; the consumer
+  # owns any extra routes.
+  #
+  # Trade-off: the default route is no longer reconciled after create. If the NAT
+  # target must change, taint/replace the route table (rare, planned change).
+  lifecycle {
+    ignore_changes = [route]
+  }
 }
 
 resource "aws_route_table_association" "private" {
